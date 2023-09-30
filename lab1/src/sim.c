@@ -108,16 +108,16 @@ void process_instruction()
                 }
                 case 0x8: {
                         //JR
+                        printf("jr\n");
                         NEXT_STATE.PC = CURRENT_STATE.REGS[rs];
-                        pc_add();
                         break;
                 }
                 case 0x9: {
                         // JALR
                         // 将程序计数器（PC）设置为寄存器rs中的值，并将下一条指令的地址存储在寄存器rd中
+                        printf("jalr\n");
                         NEXT_STATE.REGS[rd] = CURRENT_STATE.PC + 4;
                         NEXT_STATE.PC = CURRENT_STATE.REGS[rs];
-                        pc_add();
                         break;
                 }
                 case 0xC: {
@@ -207,6 +207,7 @@ void process_instruction()
                 }
                 case 0x21: {
                         //ADDU
+                        printf("addu\n");
                         NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] + CURRENT_STATE.REGS[rt];
                         pc_add();
                         break;
@@ -271,6 +272,7 @@ void process_instruction()
         case 0x1: {
             switch (rt){
                 case 0x0: { // BLTZ
+                    printf("bltz\n");
                     // 如果rs寄存器中的值小于零，则分支到目标地址
                     if ((int32_t)CURRENT_STATE.REGS[rs] < 0) {
                         NEXT_STATE.PC = CURRENT_STATE.PC + (sign_ext(imm) << 2);
@@ -280,6 +282,7 @@ void process_instruction()
                     break;
                 }
                 case 0x1: { // BGEZ
+                    printf("bgez\n");
                     // 如果rs寄存器中的值大于或等于零，则分支到目标地址
                     if ((int32_t)CURRENT_STATE.REGS[rs] >= 0) {
                         NEXT_STATE.PC = CURRENT_STATE.PC + (sign_ext(imm) << 2);
@@ -289,6 +292,7 @@ void process_instruction()
                     break;
                 }
                 case 0x10: { // BLTZAL
+                    printf("bltzal\n");
                     // 如果rs寄存器中的值小于零，则分支到目标地址，并将下一条指令的地址存储在寄存器31（ra寄存器）中
                     if ((int32_t)CURRENT_STATE.REGS[rs] < 0) {
                         NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 4;
@@ -299,6 +303,7 @@ void process_instruction()
                     break;
                 }
                 case 0x11: { // BGEZAL
+                    printf("bgezal\n");
                     // 如果rs寄存器中的值大于或等于零，则分支到目标地址，并将下一条指令的地址存储在寄存器31（ra寄存器）中
                     if ((int32_t)CURRENT_STATE.REGS[rs] >= 0) {
                         NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 4;
@@ -317,13 +322,18 @@ void process_instruction()
         }
 
         case 0x2: { // J
+            printf("j\n");
+            printf("current_pc=0x%8x\n",CURRENT_STATE.PC);
             NEXT_STATE.PC = (CURRENT_STATE.PC & 0xF0000000) | (target << 2);
+            printf("next_pc=0x%8x\n",NEXT_STATE.PC);
             break;
         }
         case 0x3: { // JAL
+            printf("jal\n");
             NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 4;
+            printf("current_pc=0x%8x\n",CURRENT_STATE.PC);
             NEXT_STATE.PC = (CURRENT_STATE.PC & 0xF0000000) | (target << 2);
-            pc_add();
+            printf("next_pc=0x%8x\n",NEXT_STATE.PC);
             break;
         }
         case 0x4: { // BEQ
@@ -338,11 +348,12 @@ void process_instruction()
             } else {
                 pc_add();
             }
-            
+            printf("beq\n");
             
             break;
         }
         case 0x5: { // BNE
+            printf("bne\n");
             if (CURRENT_STATE.REGS[rs] != CURRENT_STATE.REGS[rt]) {
                 NEXT_STATE.PC = CURRENT_STATE.PC + (sign_ext(imm) << 2);
             } else {
@@ -351,6 +362,7 @@ void process_instruction()
             break;
         }
         case 0x6: { // BLEZ
+            printf("blez\n");
             if ((int32_t)CURRENT_STATE.REGS[rs] <= 0) {
                 NEXT_STATE.PC = CURRENT_STATE.PC + (sign_ext(imm) << 2) + 4;
             } else {
@@ -360,6 +372,7 @@ void process_instruction()
         }
         case 0x7: { // BGTZ
             // 如果rs寄存器中的值大于零，分支到目标地址
+            printf("bgtz\n");
             if ((int32_t)CURRENT_STATE.REGS[rs] > 0) {
                 NEXT_STATE.PC = CURRENT_STATE.PC + (sign_ext(imm) << 2);
             } else {
@@ -369,13 +382,14 @@ void process_instruction()
         }
         case 0x8: { // ADDI
             // 将寄存器rs中的值与立即数imm相加，结果存储在寄存器rt中
-            NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + imm;
+            NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + sign_ext(imm);
             pc_add();
             break;
         }
         case 0x9: { // ADDIU
-            // 将寄存器rs中的值与无符号立即数imm相加，结果存储在寄存器rt中
-            NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + imm;
+            // 将寄存器rs中的值与立即数imm相加，结果存储在寄存器rt中，不考虑溢出。
+            printf("addiu\n");
+            NEXT_STATE.REGS[rt] = CURRENT_STATE.REGS[rs] + sign_ext(imm);
 
             pc_add();
             break;
